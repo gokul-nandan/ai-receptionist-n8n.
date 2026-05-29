@@ -1,10 +1,10 @@
-# 🤖 AI Receptionist & CRM Lead Qualifier (n8n + Gemini + HubSpot)
+# AI Receptionist & CRM Lead Qualifier (n8n + Gemini + HubSpot)
 
 An automated front-desk assistant that intercepts incoming customer inquiries, uses **Google Gemini** to analyze intent, dynamically routes requests, logs qualified leads directly into **HubSpot CRM**, and sends real-time Slack alerts to the sales team.
 
 ---
 
-## 🗺️ System Architecture
+## System Architecture
 
 The following flowchart illustrates how customer inquiries are routed, parsed by AI, and processed across external services:
 
@@ -31,7 +31,7 @@ graph TD
 
 ---
 
-## ✨ Features
+## Features
 
 - **Real-Time Intake:** Listens 24/7 for customer messages using an HTTP Webhook trigger.
 - **Cognitive AI Core:** Utilizes the Google Gemini `gemini-1.5-flash` model to analyze inquiry text, classify intent, and draft professional summaries.
