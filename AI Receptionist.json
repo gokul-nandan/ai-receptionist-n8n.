@@ -1,0 +1,490 @@
+{
+  "name": "AI Receptionist",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receptionist",
+        "options": {}
+      },
+      "id": "ee2fcf00-1add-46fb-8418-ee69387dd680",
+      "name": "Incoming Inquiry Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "96f7b4dd-95ca-499b-bcfa-e00394c0592c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.messageText }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI receptionist. Analyze the incoming message and classify the intent into one of these categories: \"Booking Request\", \"Support Q&A\", or \"Sales Quote\". Also provide a brief summary of the message. Return JSON with \"intent\" and \"summary\" fields."
+        }
+      },
+      "id": "60cd34bf-a09e-473d-b88d-adc8950757b6",
+      "name": "Classify Intent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        464,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"output\": {\n    \"intent\": \"Sales Quote\",\n    \"summary\": \"The user is requesting a sales quote.\"\n  }\n}"
+      },
+      "id": "e8aa75d1-173a-40b2-b5fe-946f198e8a3f",
+      "name": "Intent Classifier Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        704,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.intent }}",
+                    "rightValue": "Booking Request",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8f02324a-4379-4513-8be3-68ca59c9a8ab"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Booking Request"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.intent }}",
+                    "rightValue": "Sales Quote",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f80ccd52-0511-4563-a4f6-c9ca5d66d143"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sales Quote"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.intent }}",
+                    "rightValue": "Support Q&A",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b3534d92-7e82-45ac-a37a-beebf42a7eec"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Support Q&A"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "25d6f8ec-df05-457b-89f9-d26956f33fd8",
+      "name": "Route by Intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        816,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "kingbablu2006@gmail.com",
+          "mode": "list",
+          "cachedResultName": "kingbablu2006@gmail.com"
+        },
+        "start": "={{ $now.plus(1, \"days\").set({ hour: 14, minute: 0 }).toISO() }}",
+        "end": "={{ $now.plus(1, \"days\").set({ hour: 14, minute: 30 }).toISO() }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ $(\"Incoming Inquiry Webhook\").item.json.body.senderEmail }}"
+          ],
+          "description": "=Tentative meeting scheduled via AI Receptionist.\n\nSummary: {{ $(\"Classify Intent\").item.json.summary }}",
+          "summary": "=Demo Meeting - {{ $(\"Incoming Inquiry Webhook\").item.json.body.senderName }}"
+        }
+      },
+      "id": "364c42b8-8e43-4670-8264-8c2bf6d6a828",
+      "name": "Create Tentative Meeting",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        208
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "RMinWtOe16XPj14k",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.senderEmail }}",
+        "subject": "Your Meeting Has Been Scheduled",
+        "message": "=Hi {{ $(\"Incoming Inquiry Webhook\").item.json.body.senderName }},\n\nYour meeting has been tentatively scheduled for {{ $(\"Create Tentative Meeting\").item.json.start.dateTime }}.\n\nCalendar Link: {{ $(\"Create Tentative Meeting\").item.json.htmlLink }}\n\nLooking forward to speaking with you!\n\nBest regards,\nAI Receptionist",
+        "options": {
+          "senderName": "AI Receptionist"
+        }
+      },
+      "id": "fd56c22c-b028-4a07-9d7e-d40aad86961d",
+      "name": "Send Calendar Invite",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        208
+      ],
+      "webhookId": "179448b6-3bf8-42be-a29d-5ae96e69b20b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCiRFD6lybypftxN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.senderEmail }}",
+        "additionalFields": {
+          "companySize": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.companySize }}",
+          "firstName": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.senderName.split(\" \")[0] }}",
+          "lastName": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.senderName.split(\" \")[1] ?? \"\" }}",
+          "leadStatus": ""
+        },
+        "options": {}
+      },
+      "id": "a176b1df-e81d-4ac0-9c7b-5a7b62ebc6e9",
+      "name": "Create HubSpot Lead",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        400
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "XWXAT6vzB37vwfwm",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.companySize }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9c576429-7571-4f74-aa3a-c435ea5287d0",
+      "name": "Is High Value Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1264,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U0B6SCFB4V9",
+          "mode": "list",
+          "cachedResultName": "kingbablu2006"
+        },
+        "text": "=@here High Value Lead Alert!\n\nName: {{ $(\"Incoming Inquiry Webhook\").item.json.body.senderName }}\nEmail: {{ $(\"Incoming Inquiry Webhook\").item.json.body.senderEmail }}\nCompany Size: {{ $(\"Incoming Inquiry Webhook\").item.json.body.companySize }} employees\n\nSummary: {{ $(\"Classify Intent\").item.json.summary }}",
+        "otherOptions": {}
+      },
+      "id": "6e13b5e8-2867-483f-a904-82a398e9d376",
+      "name": "Alert Sales Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1488,
+        400
+      ],
+      "webhookId": "dbccfdd5-5074-42ed-bfea-a98a729918e8",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "TSiRYtWX6B8C3FjF",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "responseText",
+              "value": "=Dear {{ $(\"Incoming Inquiry Webhook\").item.json.body.senderName }},\n\nThank you for reaching out to us. We have received your inquiry and our support team will respond within 2 hours.\n\nYour question: {{ $(\"Incoming Inquiry Webhook\").item.json.body.messageText }}\n\nBest regards,\nSupport Team",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "recipientEmail",
+              "value": "={{ $(\"Incoming Inquiry Webhook\").item.json.body.senderEmail }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f49d69c9-00c7-4bd3-ade6-366cd30251b2",
+      "name": "Draft Support Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.recipientEmail }}",
+        "subject": "We Received Your Support Request",
+        "emailType": "text",
+        "message": "={{ $json.responseText }}",
+        "options": {
+          "senderName": "Support Team"
+        }
+      },
+      "id": "7b543b44-9ddd-4a41-9335-d507d12d4c67",
+      "name": "Send Support Response",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        592
+      ],
+      "webhookId": "0fe3ad13-c3ef-4662-9d3b-871a62bab60c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DCiRFD6lybypftxN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        672
+      ],
+      "id": "7f12a027-0a90-450f-a399-71f83c014a3d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IIfF72JK3FGG9p6I",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Incoming Inquiry Webhook": {
+      "main": [
+        [
+          {
+            "node": "Classify Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Intent": {
+      "main": [
+        [
+          {
+            "node": "Route by Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Classifier Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Intent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Intent": {
+      "main": [
+        [
+          {
+            "node": "Create Tentative Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create HubSpot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Draft Support Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Tentative Meeting": {
+      "main": [
+        [
+          {
+            "node": "Send Calendar Invite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create HubSpot Lead": {
+      "main": [
+        [
+          {
+            "node": "Is High Value Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is High Value Lead?": {
+      "main": [
+        [
+          {
+            "node": "Alert Sales Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Support Response": {
+      "main": [
+        [
+          {
+            "node": "Send Support Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Intent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "68ca8f2a-f8a8-461c-a764-93bda83157aa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7f2925df8ff43db6af46d5d7a98f60bdfb6127c64f22e4903000c6e1d0701a33"
+  },
+  "id": "xhXarAV5dmGvSlDF",
+  "tags": []
+}
