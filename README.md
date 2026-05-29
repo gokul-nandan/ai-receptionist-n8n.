@@ -80,7 +80,8 @@ The workflow completed a **100% successful end-to-end execution** with every nod
 - **HubSpot CRM Success:** Created a live contact for **Jane Doe** in the HubSpot database with a unique Contact ID (**`493442137811`**).
 - **High-Value Filter:** Identified `65` was > 50 and triggered the Slack alert.
 - **Slack Alert:** Posted the formatted `@here` markdown lead alert directly in the workspace `#general` channel.
-               <img width="251" height="164" alt="Slack Alert" src="https://github.com/user-attachments/assets/b7e0ed4d-b939-4ecf-9103-4949dc902927" />
+
+<img width="251" height="164" alt="Slack Alert" src="https://github.com/user-attachments/assets/b7e0ed4d-b939-4ecf-9103-4949dc902927" />
 
 ---
 
