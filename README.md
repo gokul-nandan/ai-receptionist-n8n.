@@ -1,12 +1,14 @@
-# AI Receptionist & CRM Lead Qualifier (n8n + Gemini + HubSpot)
+# 🤖 Project Case Study & Setup Guide: My AI Receptionist & CRM Lead Qualifier
 
-An automated front-desk assistant that intercepts incoming customer inquiries, uses **Google Gemini** to analyze intent, dynamically routes requests, logs qualified leads directly into **HubSpot CRM**, and sends real-time Slack alerts to the sales team.
+Welcome to my project! I built a production-grade, self-healing **AI Receptionist & Lead Qualifier** workflow using **n8n**, **Google Gemini**, and **HubSpot CRM**.
+
+This page serves as a **Case Study** detailing how I designed the system, overcame 5 major technical API challenges, and verified the results—along with a **Step-by-Step Execution Guide** so you can clone and run this workflow yourself!
 
 ---
 
-## System Architecture
+## 🗺️ System Architecture
 
-The following flowchart illustrates how customer inquiries are routed, parsed by AI, and processed across external services:
+Here is the architectural blueprint of the automation pipeline I constructed:
 
 ```mermaid
 graph TD
@@ -31,87 +33,98 @@ graph TD
 
 ---
 
-## Features
+## 🧠 Part 1: My Journey & 5 Challenges I Overcame
 
-- **Real-Time Intake:** Listens 24/7 for customer messages using an HTTP Webhook trigger.
-- **Cognitive AI Core:** Utilizes the Google Gemini `gemini-1.5-flash` model to analyze inquiry text, classify intent, and draft professional summaries.
-- **Dynamic Routing:** Processes and directs leads along custom execution paths using conditional logic (Booking vs. Sales vs. Q&A).
-- **Automated CRM Logging:** Automatically creates contacts in HubSpot with dynamically parsed details (First Name, Last Name, Email, and Company Size).
-- **High-Value Lead Filtering:** Scans metadata (e.g., Company Size > 50) and escalates large accounts instantly.
-- **Instant Notifications:** Posts structured markdown alerts directly into your team's Slack channel.
+Building real-world integrations means handling unexpected API errors, scope restrictions, and data-mapping quirks. Here is the "battle log" of how I solved every roadblock encountered during development:
+
+### 1. Navigating HubSpot API Deprecations
+* **The Challenge:** I initially connected HubSpot using standard API Keys. However, HubSpot deprecated API Keys in late 2022, causing connections to fail.
+* **The Solution:** I shifted to HubSpot's modern **Private App Access Token** standard. I created a private app, configured strict read/write scopes for contacts (`crm.objects.contacts.read`/`crm.objects.contacts.write`), and successfully connected n8n using a secure **Service Key (Bearer Token)**.
+
+### 2. Handling Premature Terminal Command Execution
+* **The Challenge:** During testing, the Webhook node kept receiving empty request bodies (`Content-Length: 0`). I discovered that pasting multi-line `curl` commands into my macOS Terminal caused it to execute the very first line instantly, omitting the JSON data payload.
+* **The Solution:** I engineered a robust **single-line `curl` trigger command** that packages headers and JSON payloads safely in one line, ensuring a 100% data transmission rate.
+
+### 3. Fixing the Parser Placeholder Schema
+* **The Challenge:** Once the data arrived, the AI node threw a JSON parser error. The n8n AI parser was configured with a default template schema looking for placeholder parameters like "states" and "cities".
+* **The Solution:** I updated the Schema Type to **"Generate From JSON Example"** and structured the exact nested format returned by the AI:
+  ```json
+  {
+    "output": {
+      "intent": "Sales Quote",
+      "summary": "Customer needs a quote..."
+    }
+  }
+  ```
+  This allowed the parser to successfully output clean structured values.
+
+### 4. Bypassing OpenAI Trial Credit Limits (Zero-Cost Scaling)
+* **The Challenge:** Mid-development, the n8n OpenAI trial credits expired, resulting in empty AI responses.
+* **The Solution:** Instead of paying for API credits, I migrated the AI core to **Google Gemini** (`gemini-1.5-flash`) via Google AI Studio. Google provides a highly generous, completely free tier. This resolved the issue, made the workflow faster, and made it 100% free to run forever!
+
+### 5. Solving Slack Bot OAuth Scopes
+* **The Challenge:** The Slack node failed with a `channel_not_found` error because the bot token lacked the modern `chat:write` permissions and was missing a target channel.
+* **The Solution:** I re-authorized the Slack workspace bot token with correct scopes, switched the target destination type to a public **Channel**, and successfully directed the alert to the `#general` channel.
 
 ---
 
-## 🛠️ Step-by-Step Setup Guide
+## 🏆 Part 2: The Successful Results & Validation
 
-Follow these steps to set up your repository and connect your workflow.
+The workflow completed a **100% successful end-to-end execution** with every node lighting up green!
 
-### 1. Create Your GitHub Repository
-Before copying the project, let's create a beautiful home for it on GitHub:
-
-1. Log into your [GitHub account](https://github.com/).
-2. Click **New** in the top-left to create a new repository.
-3. Fill in the following details:
-   - **Repository Name:** `ai-receptionist-n8n`
-   - **Description:** `Automated AI receptionist that qualifies leads, creates HubSpot CRM contacts, and triggers Slack alerts based on Gemini's sentiment analysis.`
-   - **Visibility:** `Public` (or Private if you prefer).
-   - **Initialize this repository with:** Check the **Add a README.md file** box.
-4. Click **Create repository** at the bottom.
-5. In your new repository page, click **Add file** -> **Upload files**, and drag in the exported `AI_Receptionist.json` file. Click **Commit changes** to save it!
+### 📊 Validation Proof:
+- **Intake:** Webhook captured the incoming payload for "Jane Doe" representing a company of 65 people.
+- **AI Classification:** Google Gemini correctly parsed the intent as **`Sales Quote`** and summarized the inquiry.
+- **Router Logic:** Cleanly evaluated the nested path (`{{ $json.output.intent }}`) and routed it down the Sales branch.
+- **HubSpot CRM Success:** Created a live contact for **Jane Doe** in the HubSpot database with a unique Contact ID (**`493442137811`**).
+- **High-Value Filter:** Identified `65` was > 50 and triggered the Slack alert.
+- **Slack Alert:** Posted the formatted `@here` markdown lead alert directly in the workspace `#general` channel.
 
 ---
 
-### 2. Import into n8n
-1. Download the `AI_Receptionist.json` file from your GitHub repository.
+## 🚀 Part 3: How YOU Can Execute This Workflow
+
+Want to run this yourself? Follow this setup guide to duplicate my workflow in under 5 minutes:
+
+### 1. Import the Workflow to n8n
+1. Download the `AI_Receptionist.json` file from this repository.
 2. Open a blank canvas in your [n8n editor](https://n8n.io/).
-3. Click anywhere on the grid canvas and press **`Cmd + V`** (Mac) or **`Ctrl + V`** (Windows) to paste the workflow. 
-4. The entire diagram will instantly generate in front of you!
+3. Click anywhere on the grid canvas and press **`Cmd + V`** (Mac) or **`Ctrl + V`** (Windows) to paste the workflow.
 
----
+### 2. Connect Your API Credentials
 
-### 3. Connect the API Credentials
+#### 🟢 A. Google Gemini Chat Model (100% Free)
+1. Get a free API Key from [Google AI Studio](https://aistudio.google.com/).
+2. In n8n, double-click the **Google Gemini Chat Model** node under `Classify Intent`.
+3. Create a new credential, paste your key, and select the stable **`gemini-1.5-flash`** model.
 
-To activate the nodes, you must hook up the credentials for each service:
-
-#### 🟢 A. Google Gemini Setup (100% Free)
-1. Go to [Google AI Studio](https://aistudio.google.com/) and click **Get API Key**.
-2. Click **Create API Key** and copy the generated token.
-3. In n8n, double-click the **Google Gemini Chat Model** node under `Classify Intent`.
-4. Create a new credential, paste your API key, and select the stable **`gemini-1.5-flash`** model.
-
-#### 🟠 B. HubSpot CRM Setup (Private App Token)
-1. Log into your [HubSpot CRM account](https://www.hubspot.com/).
-2. Click the **Gear Icon (Settings)** in the top right, then go to **Integrations** -> **Private Apps** in the left sidebar.
-3. Click **Create a private app**, name it `n8n AI Receptionist`, and go to the **Scopes** tab.
-4. Search for `contacts` and check:
+#### 🟠 B. HubSpot CRM Node
+1. Log into HubSpot. Go to **Settings (Gear Icon)** -> **Integrations** -> **Private Apps**.
+2. Click **Create a private app**, name it, and check these scopes under **Contacts**:
    - `crm.objects.contacts.read`
    - `crm.objects.contacts.write`
-5. Click **Create app**, copy the **Access Token**, and paste it into n8n under the **Service Key** credential settings of your HubSpot node.
+3. Click **Create app**, copy the **Access Token**, and paste it into the n8n HubSpot node under **Service Key** authentication.
 
-#### 🔵 C. Slack Alert Setup (Bot OAuth Scope)
-1. In your Slack Workspace, create a new Slack App in the [Slack Developer Console](https://api.slack.com/apps).
-2. Go to **OAuth & Permissions**, scroll down to **Bot Token Scopes**, and add the **`chat:write`** scope.
-3. Click **Reinstall to Workspace** at the top of the page.
-4. Copy the Bot User OAuth Token.
-5. In n8n, double-click the **Alert Sales Team** node, create a new credential, paste the token, and select **`Channel`** -> **`#general`** as the destination.
+#### 🔵 C. Slack Alert Node
+1. Create a Slack App in the [Slack Developer Console](https://api.slack.com/apps).
+2. Go to **OAuth & Permissions**, scroll to **Bot Token Scopes**, and add **`chat:write`**.
+3. Click **Reinstall to Workspace** and copy the Bot User OAuth Token.
+4. In n8n, double-click the **Alert Sales Team** node, paste the token, and select **`Channel`** -> **`#general`**.
 
 ---
 
-## 🧪 Testing the Workflow
-
-Once all nodes show active credentials, you can simulate an incoming inquiry to test the pipeline:
-
-1. In n8n, click the orange **Execute workflow** button at the bottom of the screen.
-2. Open the **Terminal** app on your Mac.
-3. Copy and paste this single-line command (replace `YOUR_WEBHOOK_URL` with your pink Webhook node's **Test URL**):
+### 3. Run a Live Test!
+1. In n8n, click **Execute workflow** at the bottom of the canvas.
+2. Open your **Terminal** app.
+3. Paste the following **single-line command** (replace `YOUR_WEBHOOK_URL` with your pink Webhook node's **Test URL**) and press **Enter**:
 
 ```bash
 curl -X POST "YOUR_WEBHOOK_URL" -H "Content-Type: application/json" -d '{"senderName":"Jane Doe","senderEmail":"jane.doe@example.com","messageText":"Hi! I am looking to get a sales quote for our company of 65 people. Who can we speak with?","companySize":65}'
 ```
 
-4. Hit **Enter** in Terminal and watch n8n process the data, log the lead in HubSpot, and trigger your Slack alert in real-time!
+4. Watch the data stream through n8n, log in HubSpot, and post the alert to your Slack workspace! 🎉
 
 ---
 
 ## 📝 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is open-source and licensed under the MIT License.
