@@ -1,4 +1,4 @@
-# 🤖 Project Case Study & Setup Guide: My AI Receptionist & CRM Lead Qualifier
+# Project Case Study & Setup Guide: My AI Receptionist & CRM Lead Qualifier
 
 Welcome to my project! I built a production-grade, self-healing **AI Receptionist & Lead Qualifier** workflow using **n8n**, **Google Gemini**, and **HubSpot CRM**.
 
@@ -6,7 +6,7 @@ This page serves as a **Case Study** detailing how I designed the system, overca
 
 ---
 
-## 🗺️ System Architecture
+## System Architecture
 
 Here is the architectural blueprint of the automation pipeline I constructed:
 
@@ -33,7 +33,7 @@ graph TD
 
 ---
 
-## 🧠 Part 1: My Journey & 5 Challenges I Overcame
+## Part 1: My Journey & 5 Challenges I Overcame
 
 Building real-world integrations means handling unexpected API errors, scope restrictions, and data-mapping quirks. Here is the "battle log" of how I solved every roadblock encountered during development:
 
@@ -68,11 +68,11 @@ Building real-world integrations means handling unexpected API errors, scope res
 
 ---
 
-## 🏆 Part 2: The Successful Results & Validation
+## Part 2: The Successful Results & Validation
 
 The workflow completed a **100% successful end-to-end execution** with every node lighting up green!
 
-### 📊 Validation Proof:
+### Validation Proof:
 - **Intake:** Webhook captured the incoming payload for "Jane Doe" representing a company of 65 people.
 - **AI Classification:** Google Gemini correctly parsed the intent as **`Sales Quote`** and summarized the inquiry.
 - **Router Logic:** Cleanly evaluated the nested path (`{{ $json.output.intent }}`) and routed it down the Sales branch.
@@ -82,7 +82,7 @@ The workflow completed a **100% successful end-to-end execution** with every nod
 
 ---
 
-## 🚀 Part 3: How YOU Can Execute This Workflow
+## Part 3: How YOU Can Execute This Workflow
 
 Want to run this yourself? Follow this setup guide to duplicate my workflow in under 5 minutes:
 
