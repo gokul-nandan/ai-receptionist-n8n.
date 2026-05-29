@@ -1,4 +1,3 @@
-<img width="1087" height="600" alt="Workflow" src="https://github.com/user-attachments/assets/f0408890-b733-43e8-a113-2e5f8901e731" />
 # Project Case Study & Setup Guide: My AI Receptionist & CRM Lead Qualifier
 
 Welcome to my project! I built a production-grade, self-healing **AI Receptionist & Lead Qualifier** workflow using **n8n**, **Google Gemini**, and **HubSpot CRM**.
@@ -71,6 +70,7 @@ Building real-world integrations means handling unexpected API errors, scope res
 
 ## Part 2: The Successful Results & Validation
 
+<img width="1087" height="600" alt="Workflow" src="https://github.com/user-attachments/assets/f0408890-b733-43e8-a113-2e5f8901e731" />
 The workflow completed a **100% successful end-to-end execution** with every node lighting up green!
 
 ### Validation Proof:
